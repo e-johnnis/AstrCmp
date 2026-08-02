@@ -11,7 +11,7 @@ LIBS=-lopencv_core -lopencv_imgcodecs -lopencv_imgproc -lopencv_features2d -lope
 build:
 	mkdir -p build
 	$(CXX) $(CFLAGS) $(INCLUDE) -fPIC -shared -o build/libacmp.so processor.cpp $(LIBS)
-	$(CXX) $(CGLAGS) $(INCLUDE) -o build/acmp main.cpp -L build -lacmp
+	$(CXX) $(CFLAGS) $(INCLUDE) -o build/acmp main.cpp -L build -lacmp
 
 install:
 	cp -d -v build/libacmp.so $(INSTALL_LIB)/.

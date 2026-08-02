@@ -35,7 +35,7 @@ namespace acmp {
     }
 
     int Processor::composite(char** files, int nfiles) {
-        if(_config.printVerbose) printf("*** Astro Composite Processor ver.%s ***\n", ACMP_VERSION);
+        if(_config.printVerbose) printf("*** AstrCmp ver.%s ***\n", ACMP_VERSION);
 
         cv::Mat dst;
         int nComp = 0;
@@ -102,10 +102,15 @@ namespace acmp {
             _autoWb(dst);
         }
 
+        if(_config.resizeHeight > 0) {
+            if(_config.printVerbose) printf("[*] resizing image...\n");
+            _resize(dst);
+        }
+
+        if(_config.printVerbose) printf("[*] saving result as \"%s\".\n", _config.fileName);
         vector<int> params = { cv::IMWRITE_TIFF_COMPRESSION, 1 };
         cv::imwrite(_config.fileName, dst, params);
         dst.release();
-        if(_config.printVerbose) printf("[*] result saved as \"%s\".\n", _config.fileName);
 
         return nComp;
     }
@@ -400,6 +405,18 @@ namespace acmp {
             pimg[i*3+1] *= cmn / sg;
             pimg[i*3+2] *= cmn / sr;
         }
+    }
+
+    void Processor::_resize(cv::Mat& img) const {
+        cv::Size rsz((img.size().width * _config.resizeHeight) / img.size().height, _config.resizeHeight);
+        cv::Mat dst;
+        
+        if(_config.printVerbose) printf("      - size: %d x %d\n", rsz.width, rsz.height);
+        cv::resize(img, dst, rsz, 0, 0, cv::INTER_CUBIC);
+        
+        img.release();
+        img = dst.clone();
+        dst.release();
     }
 
     const char* acmp_err2str(int err) {

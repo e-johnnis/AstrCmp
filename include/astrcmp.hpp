@@ -4,7 +4,7 @@
 #include<opencv2/opencv.hpp>
 #include<vector>
 
-#define ACMP_VERSION "0.3.0.0"
+#define ACMP_VERSION "0.3.1.0"
 #define ACMP_CHAR_MAX 512
 
 namespace acmp {
@@ -37,6 +37,7 @@ namespace acmp {
         int autoWb = 0;
         float starThresh = 0.35;
         float gamma = 0.45;
+        int resizeHeight = 0;
         int printVerbose = 0;
         char fileName[512];
     };
@@ -56,6 +57,7 @@ namespace acmp {
         int _align(const cv::Mat&, cv::Mat&, const std::vector<cv::KeyPoint>&, const cv::Mat&) const;
         void _addImg(cv::Mat&, const cv::Mat&, int) const;
         void _autoWb(cv::Mat&) const;
+        void _resize(cv::Mat&) const;
 
         ProcessorConf _config;
         std::vector<cv::KeyPoint> _refKeyPoints;
