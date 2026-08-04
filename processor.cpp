@@ -245,6 +245,9 @@ namespace acmp {
         if(!nkp) return;
         keypoints.resize(nkp);
 
+        descriptor.create(nkp, 3, CV_32FC1);
+        float* pdsc = reinterpret_cast<float*>(descriptor.data);
+
         #pragma omp parallel for
         for(int i = 0; i < nkp; i++) {
             cv::Point2f pt(0, 0);
@@ -268,38 +271,38 @@ namespace acmp {
 
         #pragma omp parallel for
         for(int i = 0; i < nkp; i++) {
-            float ndist = 1e9;
-            float ndx = 0, ndy = 0;
+            float ndist = 1e9, ndist2 = 1e9;
+            int nidx = -1, nidx2 = -1;
 
             for(int j = 0; j < nkp; j++) if(i != j) {
                 float dx = keypoints[j].pt.x - keypoints[i].pt.x;
-                float dy = keypoints[j].pt.y - keypoints[j].pt.y;
+                float dy = keypoints[j].pt.y - keypoints[i].pt.y;
                 float dist = sqrt(dy * dy + dy * dy);
                 if(dist < ndist) {
+                    ndist2 = ndist;
                     ndist = dist;
-                    ndx = dx;
-                    ndy = dy;
+                    nidx2 = nidx;
+                    nidx = j;
                 }
             }
 
-            float angle = 180 * atan2(ndy, ndx) / M_PI;
-            if(angle < 0) angle += 360;
-            keypoints[i].response = ndist;
-            keypoints[i].angle = angle;
-            keypoints[i].class_id = 1;
+            float dnx = keypoints[nidx2].pt.x - keypoints[nidx].pt.x;
+            float dny = keypoints[nidx2].pt.y - keypoints[nidx].pt.y;
+            float n2n = sqrt(dnx * dnx + dny * dny);
+
+            pdsc[i * 3] = ndist;
+            pdsc[i * 3 + 1] = ndist2;
+            pdsc[i * 3 + 2] = n2n;
         }
         
-        cv::Ptr<cv::AKAZE> akaze = cv::AKAZE::create();
-        akaze->compute(tsrc, keypoints, descriptor);
         tsrc.release();
-        akaze.release();
     }
 
     int Processor::_align(const cv::Mat& src, cv::Mat& dst, const vector<cv::KeyPoint>& keypoints, const cv::Mat& descriptor) const {
         dst.release();
         if(_refKeyPoints.empty() || _refDescriptor.empty()) return 0;
 
-        cv::BFMatcher matcher(cv::NORM_HAMMING2, true);
+        cv::BFMatcher matcher(cv::NORM_L2, true);
         vector<cv::DMatch> matches;
         matcher.match(_refDescriptor, descriptor, matches);
 
