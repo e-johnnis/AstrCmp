@@ -115,6 +115,100 @@ namespace acmp {
         return nComp;
     }
 
+    int Processor::comasew(char** files, int nfiles) {
+        if(_config.printVerbose) printf("*** AstrCmp Ver.%s ***\n", ACMP_VERSION);
+
+        vector<int> vprops = { cv::VIDEOWRITER_PROP_QUALITY, 80 };
+        cv::VideoWriter vw;
+        int nComp = 0;
+
+        for(int i = 0; i < nfiles; i++) {
+            if(_config.printVerbose) printf("[*] (%d/%d) loading \"%s\"...\n", i+1, nfiles, files[i]);
+
+            cv::Mat img;
+            cv::Mat img8u;
+            int err = -1;
+            if(err = _openRaw(files[i], img)) {
+                fprintf(stderr, "[!] skipped \"%s\": %s (%d)\n", files[i], acmp_err2str(err), err);
+                continue;
+            }
+
+            if(_config.align) {
+                if(_refKeyPoints.empty() || _refDescriptor.empty()) {
+                    if(_config.printVerbose) printf("[*] getting reference...\n");
+
+                    setRefImg(img);
+
+                    if(_config.printVerbose) printf("      - keypoints = %ld\n", _refKeyPoints.size());
+                }else {
+                    if(_config.printVerbose) printf("[*] aligning...\n");
+
+                    vector<cv::KeyPoint> kps;
+                    cv::Mat desc;
+                    _detectAndCompute(img, kps, desc);
+
+                    if(!kps.size()) {
+                        fprintf(stderr, "[!] no star detected. skipped \"%s\".\n", files[i]);
+                        desc.release();
+                        img.release();
+                        continue;
+                    }else if(_config.printVerbose) {
+                        printf("      - keypoints = %ld\n", kps.size());
+                    }
+
+                    cv::Mat aln;
+                    int nm = _align(img, aln, kps, desc);
+                    kps.clear();
+                    desc.release();
+
+                    if(!nm) {
+                        fprintf(stderr, "[!] failed to align image. skipped \"%s\".\n", files[i]);
+                        continue;
+                    }else if(_config.printVerbose) {
+                        printf("      - match = %d\n", nm);
+                    }
+                    img.release();
+                    img = aln.clone();
+                    aln.release();
+                }
+            }
+
+            if(_config.autoWb) {
+                if(_config.printVerbose) printf("[*] processing awb...\n");
+                _autoWb(img);
+            }
+
+            if(_config.resizeHeight > 0) {
+                if(_config.printVerbose) printf("[*] resizing image...\n");
+                _resize(img);
+            }
+
+            img.convertTo(img8u, CV_8UC3, 255, 0);
+            img.release();
+
+            if(!vw.isOpened()) {
+                char gstStr[ACMP_CHAR_MAX];
+                sprintf(
+                    gstStr, "appsrc ! videoconvert ! vp8enc ! webmmux ! filesink location=%s",
+                    _config.fileName
+                );
+                if(!vw.open(gstStr, cv::CAP_GSTREAMER, 0, _config.fps, img8u.size())) {
+                    fprintf(stderr, "[!] failed to open video stream.\n");
+                    img8u.release();
+                    return nComp;
+                }
+            }
+            vw.write(img8u);
+
+            img8u.release();
+
+            nComp++;
+        }
+        vw.release();
+
+        return nComp;
+    }
+
     void Processor::_initHprKernel() {
         _hprKernel = cv::Mat(3, 3, CV_32FC1);
         float* phpr = reinterpret_cast<float*>(_hprKernel.data);
@@ -410,7 +504,7 @@ namespace acmp {
     void Processor::_resize(cv::Mat& img) const {
         cv::Size rsz((img.size().width * _config.resizeHeight) / img.size().height, _config.resizeHeight);
         cv::Mat dst;
-        
+
         if(_config.printVerbose) printf("      - size: %d x %d\n", rsz.width, rsz.height);
         cv::resize(img, dst, rsz, 0, 0, cv::INTER_CUBIC);
         

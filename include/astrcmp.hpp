@@ -4,7 +4,7 @@
 #include<opencv2/opencv.hpp>
 #include<vector>
 
-#define ACMP_VERSION "0.3.1.0"
+#define ACMP_VERSION "0.4.0.0"
 #define ACMP_CHAR_MAX 512
 
 namespace acmp {
@@ -19,7 +19,8 @@ namespace acmp {
         COMP_SUM = 0,
         COMP_AVR,
         COMP_MIN,
-        COMP_MAX
+        COMP_MAX,
+        COMP_TIMELAPSE
     };
 
     enum BayerPattern {
@@ -38,6 +39,7 @@ namespace acmp {
         float starThresh = 0.35;
         float gamma = 0.45;
         int resizeHeight = 0;
+        int fps = 15;
         int printVerbose = 0;
         char fileName[512];
     };
@@ -49,6 +51,7 @@ namespace acmp {
         void release();
         void setRefImg(const cv::Mat&);
         int composite(char**, int);
+        int comasew(char**, int);
 
     private:
         void _initHprKernel();
