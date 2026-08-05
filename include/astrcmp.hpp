@@ -4,7 +4,7 @@
 #include<opencv2/opencv.hpp>
 #include<vector>
 
-#define ACMP_VERSION "0.4.0.0"
+#define ACMP_VERSION "0.4.1.0"
 #define ACMP_CHAR_MAX 512
 
 namespace acmp {
@@ -57,14 +57,14 @@ namespace acmp {
     private:
         void _initHprKernel();
         int _openRaw(const char*, cv::Mat&);
-        void _detectAndCompute(const cv::Mat&, std::vector<cv::KeyPoint>&, cv::Mat&);
-        int _align(const cv::Mat&, cv::Mat&, const std::vector<cv::KeyPoint>&, const cv::Mat&) const;
+        void _detectAndCompute(const cv::Mat&, std::vector<cv::Point>&, cv::Mat&);
+        int _align(const cv::Mat&, cv::Mat&, const std::vector<cv::Point>&, const cv::Mat&) const;
         void _addImg(cv::Mat&, const cv::Mat&, int) const;
         void _autoWb(cv::Mat&) const;
         void _resize(cv::Mat&) const;
 
         ProcessorConf _config;
-        std::vector<cv::KeyPoint> _refKeyPoints;
+        std::vector<cv::Point> _refKeyPoints;
         cv::Mat _refDescriptor;
         cv::Mat _hprKernel;
     };

@@ -60,7 +60,7 @@ namespace acmp {
                 }else {
                     if(_config.printVerbose) printf("[*] aligning...\n");
 
-                    vector<cv::KeyPoint> kps;
+                    vector<cv::Point> kps;
                     cv::Mat desc;
                     _detectAndCompute(img, kps, desc);
 
@@ -142,7 +142,7 @@ namespace acmp {
                 }else {
                     if(_config.printVerbose) printf("[*] aligning...\n");
 
-                    vector<cv::KeyPoint> kps;
+                    vector<cv::Point> kps;
                     cv::Mat desc;
                     _detectAndCompute(img, kps, desc);
 
@@ -321,7 +321,7 @@ namespace acmp {
         return ACMP_SUCCESS;
     }
 
-    void Processor::_detectAndCompute(const cv::Mat& src, vector<cv::KeyPoint>& keypoints, cv::Mat& descriptor) {
+    void Processor::_detectAndCompute(const cv::Mat& src, vector<cv::Point>& keypoints, cv::Mat& descriptor) {
         keypoints.clear();
         descriptor.release();
 
@@ -355,14 +355,7 @@ namespace acmp {
                 pt.y += (float)contours[i][j].y / np;
             }
 
-            for(int j = 0; j < np; j++) {
-                float dx = contours[i][j].x - pt.x;
-                float dy = contours[i][j].y - pt.y;
-                size += sqrt(dx * dx + dy * dy) / np;
-            }
-
-            keypoints[i].pt = pt;
-            keypoints[i].size = size;
+            keypoints[i] = pt;
         }
 
         #pragma omp parallel for
@@ -371,8 +364,8 @@ namespace acmp {
             int nidx = -1, nidx2 = -1;
 
             for(int j = 0; j < nkp; j++) if(i != j) {
-                float dx = keypoints[j].pt.x - keypoints[i].pt.x;
-                float dy = keypoints[j].pt.y - keypoints[i].pt.y;
+                float dx = keypoints[j].x - keypoints[i].x;
+                float dy = keypoints[j].y - keypoints[i].y;
                 float dist = sqrt(dy * dy + dy * dy);
                 if(dist < ndist) {
                     ndist2 = ndist;
@@ -382,8 +375,8 @@ namespace acmp {
                 }
             }
 
-            float dnx = keypoints[nidx2].pt.x - keypoints[nidx].pt.x;
-            float dny = keypoints[nidx2].pt.y - keypoints[nidx].pt.y;
+            float dnx = keypoints[nidx2].x - keypoints[nidx].x;
+            float dny = keypoints[nidx2].y - keypoints[nidx].y;
             float n2n = sqrt(dnx * dnx + dny * dny);
 
             pdsc[i * 3] = ndist;
@@ -394,7 +387,7 @@ namespace acmp {
         tsrc.release();
     }
 
-    int Processor::_align(const cv::Mat& src, cv::Mat& dst, const vector<cv::KeyPoint>& keypoints, const cv::Mat& descriptor) const {
+    int Processor::_align(const cv::Mat& src, cv::Mat& dst, const vector<cv::Point>& keypoints, const cv::Mat& descriptor) const {
         dst.release();
         if(_refKeyPoints.empty() || _refDescriptor.empty()) return 0;
 
@@ -408,8 +401,8 @@ namespace acmp {
         }
         vector<cv::Point2f> query(nm), train(nm);
         for(int i = 0; i < nm; i++) {
-            query[i] = _refKeyPoints[matches[i].queryIdx].pt;
-            train[i] = keypoints[matches[i].trainIdx].pt;
+            query[i] = _refKeyPoints[matches[i].queryIdx];
+            train[i] = keypoints[matches[i].trainIdx];
         }
         matches.clear();
 
