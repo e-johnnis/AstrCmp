@@ -118,7 +118,6 @@ namespace acmp {
     int Processor::comasew(char** files, int nfiles) {
         if(_config.printVerbose) printf("*** AstrCmp Ver.%s ***\n", ACMP_VERSION);
 
-        vector<int> vprops = { cv::VIDEOWRITER_PROP_QUALITY, 80 };
         cv::VideoWriter vw;
         int nComp = 0;
 
@@ -189,8 +188,8 @@ namespace acmp {
             if(!vw.isOpened()) {
                 char gstStr[ACMP_CHAR_MAX];
                 sprintf(
-                    gstStr, "appsrc ! videoconvert ! vp8enc ! webmmux ! filesink location=%s",
-                    _config.fileName
+                    gstStr, "appsrc ! videoconvert ! jpegenc quality=%d ! avimux ! filesink location=%s",
+                    _config.encodeQuality, _config.fileName
                 );
                 if(!vw.open(gstStr, cv::CAP_GSTREAMER, 0, _config.fps, img8u.size())) {
                     fprintf(stderr, "[!] failed to open video stream.\n");
@@ -204,6 +203,9 @@ namespace acmp {
 
             nComp++;
         }
+        if(_config.printVerbose) printf("[*] %d images total.\n", nComp);
+
+        if(_config.printVerbose) printf("[*] finishing encoding...\n");
         vw.release();
 
         return nComp;
@@ -505,7 +507,11 @@ namespace acmp {
     }
 
     void Processor::_resize(cv::Mat& img) const {
-        cv::Size rsz((img.size().width * _config.resizeHeight) / img.size().height, _config.resizeHeight);
+        int rwidth = (img.size().width * _config.resizeHeight) / img.size().height;
+        int uw = rwidth % 4;
+        if(uw) rwidth -= uw;
+
+        cv::Size rsz(rwidth, _config.resizeHeight);
         cv::Mat dst;
 
         if(_config.printVerbose) printf("      - size: %d x %d\n", rsz.width, rsz.height);

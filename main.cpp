@@ -25,7 +25,7 @@ int main(int argc, char** argv) {
     else if(!strcmp(argv[optind], "max")) config.compType = acmp::COMP_MAX;
     else if(!strcmp(argv[optind], "timelapse") || !strcmp(argv[optind], "tl")) {
         config.compType = acmp::COMP_TIMELAPSE;
-        sprintf(config.fileName, "acmp_result.webm");
+        sprintf(config.fileName, "acmp_result.avi");
     }else {
         fprintf(stderr, "[!] invalid composite type \"%s\".\n", argv[optind]);
         showHelp();
@@ -76,6 +76,14 @@ int main(int argc, char** argv) {
                     fprintf(stderr, "[?] fps is available only in timelapse mode.\n");
                 }
                 break;
+            case 'q':
+                if(!sscanf(optarg, "%d", &config.encodeQuality)) {
+                    fprintf(stderr, "[!] invalid value for key 'q': \"%s\"\n", optarg);
+                    return 3;
+                }else if(config.compType != acmp::COMP_TIMELAPSE) {
+                    fprintf(stderr, "[?] encode quality is available only in timelapse mode.\n");
+                }
+                break;
             case 'v':
                 config.printVerbose = 1;
                 break;
@@ -98,7 +106,7 @@ void showHelp() {
     printf("timelapse mode : acmp timelapse|tl [options...] <raw_image_files...>\n");
     printf("\n");
     printf("options:\n");
-    printf("  -o [string] : output file name (*.tif, default=acmp_result.tif)\n");
+    printf("  -o [string] : output file name (*.tif/*.avi, default=acmp_result.tif)\n");
     printf("                default=acmp_result.webm in timelapse mode\n");
     printf("  -w          : enable auto wb\n");
     printf("  -a          : enable alignment\n");
@@ -106,7 +114,8 @@ void showHelp() {
     printf("  -t [float]  : set star detection threshold for alignment (0-1, default=0.35)\n");
     printf("  -g [float]  : set gamma value (default=0.45)\n");
     printf("  -h [int]    : enable resize and set height pixels\n");
-    printf("  -f [int]    : set fps (timelapse mode only, default=15)\n");
+    printf("  -f [int]    : set fps (default=15)\n");
+    printf("  -q [int]    : set mjpg encoding quality (0-100, default=50)\n");
     printf("  -v          : print progress while processing\n");
     printf("\n");
 }
