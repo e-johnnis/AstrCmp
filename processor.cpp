@@ -366,7 +366,7 @@ namespace acmp {
             for(int j = 0; j < nkp; j++) if(i != j) {
                 float dx = keypoints[j].x - keypoints[i].x;
                 float dy = keypoints[j].y - keypoints[i].y;
-                float dist = sqrt(dy * dy + dy * dy);
+                float dist = sqrt(dx * dx + dy * dy);
                 if(dist < ndist) {
                     ndist2 = ndist;
                     ndist = dist;
