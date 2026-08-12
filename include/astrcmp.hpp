@@ -4,7 +4,7 @@
 #include<opencv2/opencv.hpp>
 #include<vector>
 
-#define ACMP_VERSION "0.4.1.1"
+#define ACMP_VERSION "0.4.2.0"
 #define ACMP_CHAR_MAX 512
 
 namespace acmp {
@@ -12,7 +12,8 @@ namespace acmp {
     enum ErrorType {
         ACMP_SUCCESS = 0,
         ACMP_ERROR_OPENFILE,
-        ACMP_ERROR_BAYERPATTERN
+        ACMP_ERROR_BAYERPATTERN,
+        ACMP_ERROR_IMGDEPTH
     };
 
     enum CompositeType {
@@ -57,6 +58,7 @@ namespace acmp {
     private:
         void _initHprKernel();
         int _openRaw(const char*, cv::Mat&);
+        int _openImg(const char*, cv::Mat&);
         void _detectAndCompute(const cv::Mat&, std::vector<cv::Point>&, cv::Mat&);
         int _align(const cv::Mat&, cv::Mat&, const std::vector<cv::Point>&, const cv::Mat&) const;
         void _addImg(cv::Mat&, const cv::Mat&, int) const;

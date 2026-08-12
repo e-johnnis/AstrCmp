@@ -56,6 +56,12 @@ namespace acmp {
 
                     setRefImg(img);
 
+                    if(!_refKeyPoints.size()) {
+                        fprintf(stderr, "[!] no star detected. skipped \"%s\".\n", files[i]);
+                        img.release();
+                        continue;
+                    }
+
                     if(_config.printVerbose) printf("      - keypoints = %ld\n", _refKeyPoints.size());
                 }else {
                     if(_config.printVerbose) printf("[*] aligning...\n");
@@ -138,6 +144,12 @@ namespace acmp {
 
                     setRefImg(img);
 
+                    if(!_refKeyPoints.size()) {
+                        fprintf(stderr, "[!] no star detected. skipped \"%s\".\n", files[i]);
+                        img.release();
+                        continue;
+                    }
+
                     if(_config.printVerbose) printf("      - keypoints = %ld\n", _refKeyPoints.size());
                 }else {
                     if(_config.printVerbose) printf("[*] aligning...\n");
@@ -162,6 +174,7 @@ namespace acmp {
 
                     if(!nm) {
                         fprintf(stderr, "[!] failed to align image. skipped \"%s\".\n", files[i]);
+                        img.release();
                         continue;
                     }else if(_config.printVerbose) {
                         printf("      - match = %d\n", nm);
@@ -221,7 +234,7 @@ namespace acmp {
         dst.release();
         LibRaw rproc;
         if(rproc.open_file(file)) {
-            return ACMP_ERROR_OPENFILE;
+            return _openImg(file, dst);
         }
         rproc.unpack();
         int xoff = rproc.imgdata.sizes.left_margin;
@@ -317,6 +330,26 @@ namespace acmp {
 
         rproc.recycle();
         rawrz.release();
+
+        return ACMP_SUCCESS;
+    }
+
+    int Processor::_openImg(const char* file, cv::Mat& dst) {
+        if(!dst.empty()) dst.release();
+
+        cv::Mat img = cv::imread(file, cv::IMREAD_COLOR | cv::IMREAD_ANYDEPTH | cv::IMREAD_IGNORE_ORIENTATION);
+
+        if(img.empty()) return ACMP_ERROR_OPENFILE;
+
+        int depth = img.depth();
+        if(depth == CV_8U) img.convertTo(dst, CV_32FC3, 1.0 / 255, 0);
+        else if(depth == CV_16S) img.convertTo(dst, CV_32FC3, 1.0 / 32767, 0);
+        else if(depth == CV_16U) img.convertTo(dst, CV_32FC3, 1.0 / 65535, 0);
+        else if(depth == CV_32F) dst = img.clone();
+        else {
+            img.release();
+            return ACMP_ERROR_IMGDEPTH;
+        }
 
         return ACMP_SUCCESS;
     }
@@ -520,6 +553,7 @@ namespace acmp {
             case ACMP_SUCCESS: return "success";
             case ACMP_ERROR_OPENFILE: return "failed to open file";
             case ACMP_ERROR_BAYERPATTERN: return "invalid bayer pattern";
+            case ACMP_ERROR_IMGDEPTH: return "invalid image depth";
         }
         return "unknown error";
     }
