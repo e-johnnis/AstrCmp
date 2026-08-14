@@ -108,6 +108,11 @@ namespace acmp {
             _autoWb(dst);
         }
 
+        if(_config.noiseReduction > 0) {
+            if(_config.printVerbose) printf("[*] reducting noise...\n");
+            _noiseReduction(dst);
+        }
+
         if(_config.resizeHeight > 0) {
             if(_config.printVerbose) printf("[*] resizing image...\n");
             _resize(dst);
@@ -188,6 +193,11 @@ namespace acmp {
             if(_config.autoWb) {
                 if(_config.printVerbose) printf("[*] processing awb...\n");
                 _autoWb(img);
+            }
+
+            if(_config.noiseReduction > 0) {
+                if(_config.printVerbose) printf("[*] reducting noise...\n");
+                _noiseReduction(img);
             }
 
             if(_config.resizeHeight > 0) {
@@ -537,6 +547,25 @@ namespace acmp {
         img.release();
         img = dst.clone();
         dst.release();
+    }
+
+    void Processor::_noiseReduction(cv::Mat& img) const {
+        int np = img.size().width * img.size().height * 3;
+        cv::Mat med;
+
+        cv::medianBlur(img, med, 5);
+
+        float* pimg = reinterpret_cast<float*>(img.data);
+        float* pmed = reinterpret_cast<float*>(med.data);
+
+        float rp = 1.0 - _config.noiseReduction;
+
+        #pragma omp parallel for
+        for(int i = 0; i < np; i++) {
+            pimg[i] = rp * pimg[i] + _config.noiseReduction * pmed[i];
+        }
+
+        med.release();
     }
 
     const char* acmp_err2str(int err) {

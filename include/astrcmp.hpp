@@ -39,6 +39,7 @@ namespace acmp {
         int autoWb = 0;
         float starThresh = 0.35;
         float gamma = 0.45;
+        float noiseReduction = 0;
         int resizeHeight = 0;
         int fps = 15;
         int encodeQuality = 50;
@@ -64,6 +65,7 @@ namespace acmp {
         void _addImg(cv::Mat&, const cv::Mat&, int) const;
         void _autoWb(cv::Mat&) const;
         void _resize(cv::Mat&) const;
+        void _noiseReduction(cv::Mat&) const;
 
         ProcessorConf _config;
         std::vector<cv::Point> _refKeyPoints;

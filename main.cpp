@@ -33,7 +33,7 @@ int main(int argc, char** argv) {
     }
     optind++;
 
-    while((copt = getopt(argc, argv, "o:war:g:t:h:f:q:v")) != -1) {
+    while((copt = getopt(argc, argv, "o:war:g:t:h:f:q:n:v")) != -1) {
         switch(copt) {
             case 'o':
                 strcpy(config.fileName, optarg);
@@ -84,6 +84,12 @@ int main(int argc, char** argv) {
                     fprintf(stderr, "[?] encode quality is available only in timelapse mode.\n");
                 }
                 break;
+            case 'n':
+                if(!sscanf(optarg, "%f", &config.noiseReduction)) {
+                    fprintf(stderr, "[!] invalid value for key 'n': \"%s\"\n", optarg);
+                    return 3;
+                }
+                break;
             case 'v':
                 config.printVerbose = 1;
                 break;
@@ -113,6 +119,7 @@ void showHelp() {
     printf("  -r [float]  : enable hot pixel reduction and set threshold (recommended=10)\n");
     printf("  -t [float]  : set star detection threshold for alignment (0-1, default=0.35)\n");
     printf("  -g [float]  : set gamma value (default=0.45)\n");
+    printf("  -n [float]  : enable noise reduction and set strength (0-1)\n");
     printf("  -h [int]    : enable resize and set height pixels\n");
     printf("  -f [int]    : set fps (default=15)\n");
     printf("  -q [int]    : set mjpg encoding quality (0-100, default=50)\n");
