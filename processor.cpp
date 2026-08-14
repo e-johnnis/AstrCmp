@@ -254,14 +254,6 @@ namespace acmp {
         }
 
         // split raw channel
-        float mul_max = max(
-            rproc.imgdata.color.cam_mul[0],
-            max(rproc.imgdata.color.cam_mul[1],
-                max(rproc.imgdata.color.cam_mul[2],
-                    rproc.imgdata.color.cam_mul[3]
-                )
-            )
-        );
         cv::Mat rawrz(height, width, CV_32FC3);
         float* prrz = reinterpret_cast<float*>(rawrz.data);
         for(size_t j = 0; j < imgSize; j++) {
@@ -380,7 +372,6 @@ namespace acmp {
         #pragma omp parallel for
         for(int i = 0; i < nkp; i++) {
             cv::Point2f pt(0, 0);
-            float size = 0;
             int np = contours[i].size();
 
             for(int j = 0; j < np; j++) {
