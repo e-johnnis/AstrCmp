@@ -4,7 +4,7 @@
 #include<opencv2/opencv.hpp>
 #include<vector>
 
-#define ACMP_VERSION "0.4.2.0"
+#define ACMP_VERSION "0.4.3.0"
 #define ACMP_CHAR_MAX 512
 
 namespace acmp {
