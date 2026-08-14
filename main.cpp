@@ -33,7 +33,7 @@ int main(int argc, char** argv) {
     }
     optind++;
 
-    while((copt = getopt(argc, argv, "o:war:g:t:h:f:v")) != -1) {
+    while((copt = getopt(argc, argv, "o:war:g:t:h:f:q:v")) != -1) {
         switch(copt) {
             case 'o':
                 strcpy(config.fileName, optarg);
